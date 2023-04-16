@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>BOOM</title>
+    <style>
+        body{
+            background-color: black;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+        }
+        svg {
+  display: block;
+  margin: auto;
+  width: 100%;
+  height: 100%;
+}
+#button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            position: right;
+        }
+        #button1 {
+            background-color: #4CAF50;
+        }
+        button:hover {
+            background-color: darkgreen;
+            color: white;}
+            #title {
+        text-align: center;
+        font-size: 24px;
+        color: white;
+        margin-top: 40px;
+      }
+      #intro {
+        text-align: center;
+        font-size: 18px;
+        color: white;
+        margin-top: 20px;
+      }
+      h1{
+        text-align: right;
+        font-size: 18px;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="title">CLICK ANY WHERE TO BOOMMM!!!</div>
+    <div id="intro">This is an example of using D3.js to create an SVG square interactive visualization. Click the button below to see pentagons!</div>
+    <h1>by Yeswanth Sai Tirumalasetty</h1>
+    <svg width="960" height="500"></svg>
+    <div id="button-container">
+      <button id="button1" onclick="location.href='pentagon.html'">Pentagons</button>
+    </div>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://intervis-projects.ccs.neu.edu/ssvg/ssvg-auto.js"></script>
+    <script>
+       var width = 960,
+        height = 500;
+      var nodes = d3.range(200).map(function() { return {radius: Math.random() * 12 + 4}; }),
+        root = nodes[0]
+        var color = d3.scale.ordinal()
+  .domain(d3.range(3))
+  .range(['lightgreen', 'blue', 'orange']);
+
+      root.radius = 0;
+      root.fixed = true;
+
+      var force = d3.layout.force()
+        .gravity(0.10)
+        .charge(function(d, i) { return i ? 0 : -2000; })
+        .nodes(nodes)
+        .size([width, height]);
+
+      force.start();
+
+      var svg = d3.select("svg");
+
+      svg.selectAll("rect")
+        .data(nodes.slice(1))
+        .enter().append("rect")
+        .attr("x", function(d) { return d.x - d.radius; })
+        .attr("y", function(d) { return d.y - d.radius; })
+        .attr("width", function(d) { return d.radius * 2; })
+        .attr("height", function(d) { return d.radius * 2; })
+        .style("fill", function(d, i) { return color(i % 3); });
+
+      force.on("tick", function(e) {
+        var q = d3.geom.quadtree(nodes),
+          i = 0,
+          n = nodes.length;
+
+        while (++i < n) q.visit(collide(nodes[i]));
+
+        svg.selectAll("rect")
+          .attr("x", function(d) { return d.x - d.radius; })
+          .attr("y", function(d) { return d.y - d.radius; });
+      });
+
+      svg.on("click", function() {
+        nodes.forEach(function(node, index) {
+          if (index > 0) {
+            node.px = Math.random() * width;
+            node.py = Math.random() * height;
+            node.x = Math.random() * width;
+            node.y = Math.random() * height;
+          }
+        });
+        force.resume();
+      });
+
+      function collide(node) {
+        var r = node.radius + 12,
+          nx1 = node.x - r,
+          nx2 = node.x + r,
+          ny1 = node.y - r,
+          ny2 = node.y + r;
+        return function(quad, x1, y1, x2, y2) {
+          if (quad.point && (quad.point !== node)) {
+            var x = node.x - quad.point.x,
+              y = node.y - quad.point.y,
+              l = Math.sqrt(x * x + y * y),
+              r = node.radius + quad.point.radius;
+            if (l < r) {
+              l = (l - r) / l * .5;
+              node.x -= x *= l;
+              node.y -= y *= l;
+              quad.point.x += x;
+              quad.point.y += y;
+            }
+          }
+          return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+        };}
+</script>
+  </body>
+</html>
